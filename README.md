@@ -16,13 +16,42 @@ a single still frame.
 
 ## Setup
 
-Requires Python 3.9-3.12 (mediapipe doesn't support 3.13+ yet).
+Requires Python 3.9-3.12 (mediapipe doesn't support 3.13+ yet) and macOS (audio output uses the built-in `say` command).
+
+If you don't already have Python 3.11 and Homebrew set up:
+
+```bash
+xcode-select --install   # required for Homebrew; a GUI installer will pop up, let it finish
+brew install python@3.11
+```
+
+Then create the venv and install dependencies:
 
 ```bash
 python3.11 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
+
+### Troubleshooting
+
+**Camera shows black, fails to open, or grabs your iPhone instead of your Mac.**
+macOS doesn't always assign your built-in webcam to index 0, especially with Continuity Camera (using an iPhone as a webcam) enabled. Every script here accepts a `--camera N` flag. Find the right index with:
+
+```bash
+python3 -c "
+import cv2
+for i in range(4):
+    cap = cv2.VideoCapture(i)
+    ok, frame = cap.read()
+    print(f'camera {i}: opened={cap.isOpened()} read_ok={ok} brightness={frame.mean() if ok else None}')
+    cap.release()
+"
+```
+
+Use whichever index reports a real (non-zero, non-`None`) brightness, e.g. `python src/collect_data.py --label HELLO --camera 1`. If it keeps grabbing your iPhone no matter the index, turn off Continuity Camera: iPhone Settings → General → AirPlay & Handoff → "Continuity Camera" (off), or Mac System Settings → General → AirDrop & Handoff → "Continuity Camera" (off). Also confirm Terminal has camera access under System Settings → Privacy & Security → Camera.
+
+**No sound.** Test macOS's TTS directly with `say "test"` in Terminal. If that's silent, it's a system audio/volume issue, not this project.
 
 ## Usage
 
